@@ -1,0 +1,40 @@
+version: '3.9'
+
+# See README.md for usage details
+
+services:
+  web:
+    container_name: tailormap-${NAME:?required}
+    build:
+      context: .
+    profiles:
+      - http
+    ports:
+      - "80:80"
+    environment:
+      - "API_PROXY_ENABLED=${API_PROXY_ENABLED:-false}"
+      - "API_PROXY_URL=${API_PROXY_URL}"
+      - "API_PROXY_HOST=${API_PROXY_HOST}"
+      - "ADMIN_PROXY_ENABLED=${ADMIN_PROXY_ENABLED:-false}"
+      - "ADMIN_PROXY_URL=${ADMIN_PROXY_URL}"
+      - "ADMIN_PROXY_HOST=${ADMIN_PROXY_HOST}"
+
+  # The same as web, but without port 80 exposed and with labels for using with Traefik as a reverse proxy.
+  web-proxied:
+    container_name: tailormap-${NAME:?required}
+    build:
+      context: .
+    profiles:
+      - proxied
+    environment:
+      - "API_PROXY_ENABLE=${API_PROXY_ENABLE:-false}"
+      - "API_PROXY_URL=${API_PROXY_URL}"
+      - "API_PROXY_HOST=${API_PROXY_HOST}"
+      - "ADMIN_PROXY_ENABLE=${ADMIN_PROXY_ENABLE:-false}"
+      - "ADMIN_PROXY_URL=${ADMIN_PROXY_URL}"
+      - "ADMIN_PROXY_HOST=${ADMIN_PROXY_HOST}"
+    labels:
+      - "traefik.http.routers.tailormap-${NAME:?required}.rule=Host(`${HOSTNAME:?required}`)"
+      - "traefik.http.routers.tailormap-${NAME:?required}.tls=true"
+      - "traefik.http.routers.tailormap-${NAME:?required}.tls.certresolver=letsencrypt"
+      - "traefik.http.services.tailormap-${NAME:?required}.loadbalancer.server.port=80"
